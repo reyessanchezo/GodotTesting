@@ -1,291 +1,207 @@
 # Getting Started
 
-This file contains step-by-step instructions for setting up the full development environment. It is written to be executable by an agent on a Windows 11 machine.
+Setup for this machine: Windows 11, local agent (Cline or Bionic), local models via Ollama. Every command is written to be executable by an agent; each step ends with a verification check.
 
-> **Version notes:** Godot 4.7.2 is the current stable release (2026-08-18). If a newer version exists, substitute it. All instructions work for any 4.x stable release.
+> **Versions:** Godot 4.7.2 is the current stable (released 2026-08-18); the winget package ID and download link below were verified against it. If a newer 4.x stable exists, the same steps apply with the new version number.
 
 ---
 
-## Step 1 — Install Godot Engine
-
-Choose **one** method below. The winget method is fastest; the ZIP method is the fallback if winget is unavailable.
+## Step 1 — Install Godot
 
 ### Option A: winget (recommended)
-
-Open PowerShell (or Windows Terminal) and run:
 
 ```powershell
 winget install -e --id GodotEngine.GodotEngine --accept-source-agreements --accept-package-agreements
 ```
 
-After installation completes, verify:
+Package `GodotEngine.GodotEngine` is published by Godot Engine (v4.7.2, verified at [winstall.app/apps/GodotEngine.GodotEngine](https://winstall.app/apps/GodotEngine.GodotEngine)). It installs the standard editor and registers `godot` / `godot_console` aliases.
+
+**Open a new terminal** so the aliases are on PATH, then verify:
 
 ```powershell
 godot --version
+# Expected: Godot Engine v4.7.2.stable
 ```
 
-Expected output: `Godot Engine v4.x.x.stable.mono` or `Godot Engine v4.x.x.stable` (mono suffix indicates .NET/C# support is included).
-
-### Option B: Manual ZIP download
+### Option B: manual ZIP
 
 1. Download the standard (GDScript) build:
    ```
    https://downloads.godotengine.org/?version=4.7.2&flavor=stable&slug=win64.exe.zip&platform=windows.64
    ```
-   If 4.7.2 has been superseded, go to [godotengine.org/download](https://godotengine.org/download/) and grab the latest stable Windows x86_64 ZIP.
+   (or the latest stable from [godotengine.org/download/windows/](https://godotengine.org/download/windows/))
 
-2. Extract the ZIP to a permanent location:
+2. Extract:
    ```powershell
-   Expand-Archive -Path "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64.zip" -Destination "C:\Godot\4.7.2\" -Force
+   Expand-Archive -Path "$env:USERPROFILE\Downloads\Godot_v4.7.2-stable_win64.exe.zip" -Destination "C:\Godot\4.7.2\" -Force
    ```
 
-3. Verify the executable exists:
+3. Verify:
    ```powershell
-   Test-Path "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"
+   Test-Path "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"   # Expected: True
    ```
 
-   Expected: `True`
+Use `& "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"` in later steps if you went this route.
 
 ---
 
-## Step 2 — Create the Project in Godot
-
-### Option A: From the editor (GUI)
-
-1. Launch Godot:
-   ```powershell
-   & "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"
-   ```
-   (Adjust path if you used winget or a different install location.)
-
-2. In the **Project Manager** that appears, click **+ Create** in the top-right.
-
-3. Fill in:
-   - **Project Name:** `AgentGameDev`
-   - **Project Path:** `C:\Godot\Projects\AgentGameDev\`
-   - **Renderer:** `Forward+ (Default)`
-   - **Edit Now:** Checked (default)
-
-4. Click **Create**. Godot generates the project folder and opens the editor.
-
-### Option B: Headless project generation (agent-friendly)
-
-If you need to set up the project without the GUI, generate the minimal `project.godot` file structure:
+## Step 2 — Install Ollama and the working models
 
 ```powershell
-# Create project directory
-New-Item -ItemType Directory -Force -Path "C:\Godot\Projects\AgentGameDev"
-
-# Create minimal project.godot (Godot will update this when opened in the editor)
-@"
-; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; but it can also be edited by hand.
-; Godot v4.7.2+ compatible.
-
-[application]
-
-config/name="AgentGameDev"
-
-[display]
-
-window/size/viewport_width=1280
-window/size/viewport_height=720
-window/stretch/mode="canvas_items"
-
-[rendering]
-
-renderer/rendering_method="forward_plus"
-"@ | Out-File -FilePath "C:\Godot\Projects\AgentGameDev\project.godot" -Encoding utf8
-
-# Create minimal folder structure
-New-Item -ItemType Directory -Force -Path "C:\Godot\Projects\AgentGameDev\scenes"
-New-Item -ItemType Directory -Force -Path "C:\Godot\Projects\AgentGameDev\scripts"
-New-Item -ItemType Directory -Force -Path "C:\Godot\Projects\AgentGameDev\assets"
+winget install Ollama.Ollama
 ```
 
-> **Note:** The stub `project.godot` above is minimal. Open the project in the Godot editor at least once — it will update the file with engine-detected settings.
+If winget can't find it, `winget search ollama` or download from [ollama.com/download](https://ollama.com/download). Open a **new terminal**, then pull the models:
+
+```powershell
+ollama pull qwen3:30b                # day-to-day — Qwen3-30B-A3B (MoE, ~19GB, 256K context)
+ollama pull nemotron-3.5-super:120b  # overnight — Nemotron 3.5 Super (120B MoE, 80–90GB, 1M context, vision)
+ollama list                          # both models should appear
+```
+
+**Model policy (also in CLAUDE.md):** Qwen 30B for day-to-day coding and iteration; Nemotron 3.5 Super 120B for comprehensive / long autonomous sessions. `qwen3:32b` (dense, ~20GB, 40K context) is the alternative day-to-day tag if you prefer dense over MoE. Note the overnight model downloads ~80–90GB and needs a machine with the RAM to serve it — if this box can't host it, run the loop on qwen3:30b and pull it where it will run. Tags verified against the Ollama library on 2026-11-05 ([qwen3](https://ollama.com/library/qwen3), [nemotron-3.5-super](https://ollama.com/library/nemotron-3.5-super)).
 
 ---
 
-## Step 3 — Link the Project to This Repo
+## Step 3 — Open this repo in the Godot editor
 
-The repo is at `B:\documents\GitHub\GodotTesting`. The Godot project should live inside it.
+The repo root **is** the Godot project — `project.godot` is already committed here. There is nothing to create.
 
-```powershell
-# Move or copy the Godot project into the repo
-if (Test-Path "C:\Godot\Projects\AgentGameDev") {
-    Move-Item "C:\Godot\Projects\AgentGameDev" "B:\documents\GitHub\GodotTesting\AgentGameDev" -Force
-}
-```
-
-If the repo folder doesn't exist yet, create it:
-
-```powershell
-New-Item -ItemType Directory -Force -Path "B:\documents\GitHub\GodotTesting"
-```
-
-The final layout should be:
-
-```
-B:\documents\GitHub\GodotTesting\
-├── AgentGameDev/              # Godot project (created in Step 2)
-│   ├── project.godot
-│   ├── scenes/
-│   ├── scripts/
-│   ├── assets/
-│   └── ...
-├── docs/
-│   ├── gdd.md
-│   └── tech-design.md
-├── src/
-│   ├── player/
-│   ├── enemies/
-│   ├── ui/
-│   └── systems/
-├── assets/
-│   ├── sprites/
-│   ├── audio/
-│   └── models/
-├── agent-assisted-game-dev-report/
-├── CLAUDE.md
-├── GETTING_STARTED.md
-├── README.md
-└── .gitignore
-```
-
----
-
-## Step 4 — Verify Everything Works
-
-1. Open the project in the Godot editor:
+1. Launch the Project Manager:
    ```powershell
-   & "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe" "B:\documents\GitHub\GodotTesting\AgentGameDev"
+   godot
+   ```
+   (or `& "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"` for the ZIP install)
+
+2. If the project doesn't appear in the list, click **Import**, browse to:
+   ```
+   B:\Documents\GitHub\GodotTesting\project.godot
+   ```
+   and click **Import**.
+
+3. Click **Edit** next to the project. The first open triggers asset import — wait for it to finish. Godot may add default settings keys to `project.godot`; that's expected, commit the result.
+
+---
+
+## Step 4 — Verify the baseline
+
+A minimal main scene is committed (`scenes/main.tscn` + `src/main.gd`: one node, one label, one print). This is the "start from a game that already runs and that you understand line by line" baseline every iteration is measured against.
+
+1. **Visual check** — press **F5**. Expected: a 1280×720 window titled "GodotTesting" showing the label **Boot OK — main scene running**, and in the Output panel:
+   ```
+   [boot] main scene ready
    ```
 
-2. If you used the stub `project.godot`, Godot will prompt to update it. Click **Update**.
+2. **Headless boot check** (the command the agent runs to verify every iteration without the editor):
+   ```powershell
+   cd B:\Documents\GitHub\GodotTesting
+   godot --headless --path . --quit-after 10
+   ```
+   **Pass = all three:** exit code 0, `[boot] main scene ready` present, and no `SCRIPT ERROR` / `Parse Error` / `ERROR` lines in the output. Do not gate on the exit code alone — on Godot 4, a scene whose script fails to parse still runs as a bare node and the run can exit 0 (measured on 4.7.2; see [Sources](#sources)).
 
-3. The editor should open to the **Main** scene (empty by default). If it opens to the **Project Manager**, click the project name in the list and click **Edit**.
+3. **Single-script parse check** (fast, no game boot):
+   ```powershell
+   godot --headless --path . --check-only --script res://src/main.gd
+   ```
+   Expected: clean exit, no parse errors. Caveat: this check can *false-fail* a correct script that references an autoload or a `class_name` that hasn't been imported yet, and on a fresh clone it misjudges before the first import — after adding a new `class_name`, or on a fresh clone, run `godot --headless --path . --import` once first.
 
-4. Press **F5** (or click the Play button) to run the project. You should see a black window titled "AgentGameDev" that closes immediately (no scenes loaded yet — this is expected).
-
----
-
-## Step 5 — Install GDScript Language Support (verify)
-
-GDScript is built into the standard Godot build — no extra installation needed. Verify:
-
-1. In the Godot editor, go to **Editor → Editor Settings → Text Editor → Language**
-2. Confirm **GDScript** is in the list of available languages
-3. When you create a new script (right-click a node → **Attach Script**), GDScript should be the default
-
-If GDScript is missing, you downloaded the wrong build. Re-download the **Standard (64-bit)** build from [godotengine.org/download](https://godotengine.org/download/windows/) — **not** the .NET build unless you need C#.
+If all three pass, the environment is ready and iteration 1 (player movement) can start.
 
 ---
 
 ## Recommended Tool Stack
 
-Not all tools are needed at once. The table below is ordered by priority — install each only when you hit a specific bottleneck it solves. Every tool listed is free unless noted.
+Ordered by priority — install each only when it removes a specific bottleneck.
 
-### Tier 1 — Install Now
+### Tier 1 — Installed as part of setup
 
-| Tool | Purpose | Install |
-|------|---------|---------|
-| Godot 4.7.2 | Game engine | Step 1 above |
+| Tool | Purpose | Status |
+|------|---------|--------|
+| Godot 4.7.2 | Engine (Step 1) | Standard build includes GDScript; the .NET build adds C# (requires .NET SDK) |
+| Ollama | Local model runtime (Step 2) | Qwen 27–30B + Nemotron 120B pulled |
+| Cline or Bionic | Agent harness driving the iteration loop | Cline in VS Code (reads `.clinerules`), or Bionic in LM Studio |
 | Git | Version control | `winget install Git.Git` or [git-scm.com](https://git-scm.com/) |
-| Pixelorama | Pixel art editor (built with Godot, MIT) | [github.com/Pixelorama/Pixelorama](https://github.com/Pixelorama/Pixelorama) |
 
-These three cover engine, source control, and placeholder art. Nothing else is required to start.
+### Tier 2 — Add when needed
 
-### Tier 2 — Add When Needed
-
-| Tool | Purpose | Install |
-|------|---------|---------|
-| Blender | 3D modeling, rigging, animation (GPL) | [blender.org](https://www.blender.org/) |
-| Krita | Hand-painted 2D art, concept work (GPL) | [krita.org](https://krita.org/) |
-| Audacity | Audio cleanup and editing (GPL) | [audacityteam.org](https://www.audacityteam.org/) |
+| Tool | Purpose | Link |
+|------|---------|------|
+| Pixelorama | Pixel art editor, built with Godot (MIT) | [github.com/Pixelorama/Pixelorama](https://github.com/Pixelorama/Pixelorama) |
 | Kenney.nl asset packs | CC0 placeholder SFX, music, sprites | [kenney.nl/assets](https://kenney.nl/assets) |
-| sfxr.me | Browser-based SFX generator (CC0) | [sfxr.me](https://sfxr.me/) |
+| sfxr.me | Browser SFX generator (CC0) | [sfxr.me](https://sfxr.me/) |
+| Blender | 3D / Grease Pencil 2D (GPL) | [blender.org](https://www.blender.org/) |
+| Krita | Hand-painted 2D art (GPL) | [krita.org](https://krita.org/) |
+| Audacity | Audio cleanup (GPL) | [audacityteam.org](https://www.audacityteam.org/) |
 
-Blender covers 3D and 2D (Grease Pencil). Krita handles digital painting. Audacity cleans up recorded audio. Kenney and sfxr give you working placeholder audio in minutes.
-
-### Tier 3 — AI Coding Assistants
-
-Choose **one**, not all three.
-
-| Tool | Type | Cost | Best For |
-|------|------|------|----------|
-| AI Assistant Hub | In-editor plugin | Free (MIT) | Fully local via Ollama; privacy-first |
-| Godot AI MCP (dlight) | MCP bridge to Claude Code / Cursor | Free (MIT) | Terminal-based agents that need Godot editor access |
-| Ziva | In-editor agent | Free tier / $20/mo | Full agent loop inside the editor |
-
-**Recommendation:** Start with AI Assistant Hub + Ollama (free, local). If you already use Claude Code or Cursor, add Godot AI MCP as the bridge. Only consider Ziva if you want the agent to manipulate scene trees and generate assets inside the editor.
-
-### Tier 4 — Add Later
+### Tier 3 — Optional / later
 
 | Tool | Purpose | When to add |
 |------|---------|-------------|
-| Aseprite | Professional pixel art ($20) | When Pixelorama's limitations hit |
-| Inkscape | Vector UI elements and icons | When you need scalable UI art |
-| LMMS | Music composition (DAW) | When you need custom music |
-| itch.io account | Game distribution | When you have something to ship |
+| Godot Editor MCP ([hybridindie/godot-mcp](https://github.com/hybridindie/godot-mcp), MIT) | Editor bridge: agent drives the live editor — scene tree, nodes, signals, with undo | If direct `.tscn` edits start producing spatial/scene-tree errors |
+| Aseprite | Professional pixel art ($20) | When Pixelorama's limits are hit |
+| Inkscape | Vector UI icons | When you need scalable UI art |
+| LMMS | Music composition (DAW) | When placeholder music isn't enough |
+| itch.io account | Distribution | When there's something to ship |
 
-### What to Skip
+### What to skip
 
-Substance Painter, Houdini, Wwise/FMOD, Cascadeur, and Perforce are overkill for a first prototype. Add them only when the project demands their specific capability.
+Substance Painter, Houdini, Wwise/FMOD, Cascadeur, Perforce — overkill for a first 2D prototype.
 
 ---
 
 ## Next Steps (Order of Execution)
 
-These are ordered by dependency — each builds on the previous one.
+Ordered by dependency — each builds on the previous.
 
-| # | Task | Depends On | Estimated Time |
-|---|------|------------|----------------|
-| 1 | **Write the GDD** (`docs/gdd.md`) — fill in the one-page game design document with a concrete concept | None | 30 min |
-| 2 | **Write the tech design** (`docs/tech-design.md`) — define scene tree, system specs, data flow | #1 | 30 min |
-| 3 | **Set up local LLM** — install Ollama, pull Qwen3-4B or Llama 3.1 8B | None | 15 min |
-| 4 | **Create first prototype scene** — empty `Main.tscn` with a `CharacterBody2D` player node | #1, #2 | 15 min |
-| 5 | **Write player movement script** — GDScript for movement + jump | #4 | 30 min |
-| 6 | **Test player movement** — run the scene, verify controls | #5 | 10 min |
-| 7 | **Add one interaction** — NPC dialogue or environmental puzzle | #6 | 1 hr |
-| 8 | **Add one enemy type** — patrol AI with detection | #6 | 1-2 hr |
-| 9 | **Add UI** — health bar, interaction prompt | #6 | 1 hr |
-| 10 | **Decision gate** — playtest, then decide: ship, cut, or iterate | #7, #8, #9 | 30 min |
+| # | Task | Depends On | Est. Time |
+|---|------|------------|-----------|
+| 1 | **Write the GDD** — fill in `docs/gdd.md` with a concrete concept (title, core mechanic, scope) | None | 30 min |
+| 2 | **Write the tech design** — scene tree, system specs, data flow in `docs/tech-design.md` | #1 | 30 min |
+| 3 | **Iteration 1: player movement** — `src/player/player.gd`, movement + input map, new `scenes/player.tscn` | #1, #2 | 30–60 min |
+| 4 | **Verify** — headless boot check + F5, commit | #3 | 10 min |
+| 5 | **Iteration 2: one interaction** — NPC dialogue or environmental puzzle | #4 | 1 hr |
+| 6 | **Iteration 3: one enemy type** — patrol AI with detection | #4 | 1–2 hr |
+| 7 | **Iteration 4: UI** — health bar, interaction prompt | #4 | 1 hr |
+| 8 | **Decision gate** — playtest, then ship / cut / iterate once | #5, #6, #7 | 30 min |
 
 ---
 
 ## Troubleshooting
 
-### Godot won't start
+### `godot` not recognized after winget install
 
-- Check that you extracted the ZIP (don't run from inside the archive)
-- Run in a PowerShell prompt to see error output:
-  ```powershell
-  & "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe" 2>&1
-  ```
-- If you get a Vulkan error, your GPU may only support OpenGL. In the Project Manager, click the **gear icon** next to the project → **Render Mode** → switch to **OpenGL Compatible**
+Open a **new** terminal — winget PATH changes don't apply to already-open shells. If still missing, check `winget list --id GodotEngine.GodotEngine`.
 
-### "Project.godot is not valid" error
+### Project doesn't appear in the Project Manager
 
-- You created a stub `project.godot` but never opened it in the editor. Open the project in the Godot Project Manager and let it update the file.
-- Alternatively, create the project fresh via the GUI (Step 2, Option A) and copy the generated `project.godot` into the repo.
+Use **Import** (not Create) and point it at `B:\Documents\GitHub\GodotTesting\project.godot`. The project is already committed; creating a new one would produce a second, conflicting project.
 
-### GDScript not available in script dialog
+### F5 shows "No main scene set" or the project fails to open
 
-- You downloaded the .NET build but need the standard build. The standard build includes GDScript; the .NET build is for C# only.
-- Re-download from [godotengine.org/download](https://godotengine.org/download/windows/) — click **Standard (64-bit)**.
+`project.godot` should contain `run/main_scene="res://scenes/main.tscn"` under `[application]`. If it's missing, set **Project Settings → Application → Run → Main Scene** to `scenes/main.tscn`.
 
-### Winget can't find Godot
+### Headless check prints script errors
 
-- Update winget: `winget upgrade Microsoft.Winget.Source --accept-source-agreements`
-- Then retry the install command from Step 1
+Read the first error line — it names the file and line. Fix, re-run `godot --headless --path . --quit-after 10` until exit 0. This is the agent's normal loop, not an environment problem.
+
+### Vulkan / rendering errors on launch
+
+Your GPU may need the Compatibility renderer: **Project Settings → Rendering → Renderer** → switch to `gl_compatibility`, then re-verify with F5.
+
+### C# not available (only relevant if you switch to the .NET build)
+
+The .NET build requires the [.NET SDK](https://dotnet.microsoft.com/download). Note: GDScript works in **both** builds — the .NET build adds C#, it does not remove GDScript.
 
 ---
 
 ## Sources
 
-- Godot Engine 4.7.2 Windows download: [godotengine.org/download/windows/](https://godotengine.org/download/windows/)
-- Godot Windows installation guide: [docs.godotengine.org/en/stable/getting_started/installation/index.html](https://docs.godotengine.org/en/stable/getting_started/installation/index.html)
-- SightlessDev Godot setup tutorial: [sightlessdev.com/blog/godot/.../getting-godot-up-and-running](https://www.sightlessdev.com/blog/godot/series/world-1-1-the-fundamentals-gdscript-intro/getting-godot-up-and-running)
-- Godot GDScript style guide: [docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html)
+- Godot 4.7.2 Windows download: [godotengine.org/download/windows/](https://godotengine.org/download/windows/)
+- Godot installation docs: [docs.godotengine.org](https://docs.godotengine.org/en/stable/getting_started/installation/index.html)
+- winget package `GodotEngine.GodotEngine`: [winstall.app/apps/GodotEngine.GodotEngine](https://winstall.app/apps/GodotEngine.GodotEngine)
+- Official Godot .gitignore template: [github/gitignore — Godot.gitignore](https://github.com/github/gitignore/blob/main/Godot.gitignore)
+- GDScript style guide: [docs.godotengine.org](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html)
+- Project organization best practices: [docs.godotengine.org](https://docs.godotengine.org/en/stable/tutorials/best_practices/project_organization.html)
+- Godot 4.7.2 release (2026-08-18): [github.com/godotengine/godot — 4.7.2-stable](https://github.com/godotengine/godot/releases/tag/4.7.2-stable)
+- Ollama model tags: [ollama.com/library/qwen3](https://ollama.com/library/qwen3), [ollama.com/library/nemotron-3.5-super](https://ollama.com/library/nemotron-3.5-super)
+- Headless exit-code traps (measured on 4.7.2): [Godot forum — "Things that exit 0 in Godot 4 headless even though they failed"](https://forum.godotengine.org/t/things-that-exit-0-in-godot-4-headless-even-though-they-failed-measured-reproducible/145990)

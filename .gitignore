@@ -1,27 +1,20 @@
-# Godot
-*.godot
-*.godot.bak
-*.remap
-*.import
-project.godot
-*.png
-*.tscn
-*.tscn.bak
-*.tres
-*.tpproj
-*.tpproj.bak
-*.log
-*.cfg
+# Godot 4+ specific ignores
+# (based on the official template: https://github.com/github/gitignore/blob/main/Godot.gitignore)
+.godot/
+# Godot-specific ignores
+.import/
+export.cfg
+export_credentials.cfg
+*.tmp
+# Imported translations (automatically generated from CSV files)
+*.translation
+# Godot 4.2+ specific ignores
+~*.dll
 
-# Python
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.env
-.venv
-venv/
-ENV/
+# Mono / C# — uncomment only if you switch to the .NET build
+# .mono/
+# data_*/
+# mono_crash.*.json
 
 # OS
 .DS_Store
@@ -35,9 +28,12 @@ desktop.ini
 *.swo
 *~
 
-# Build
-bin/
-dist/
-*.apk
-*.aab
-*.pck
+# Python (local tooling)
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Export outputs — uncomment if you do not want builds in git
+# *.exe
+# *.pck

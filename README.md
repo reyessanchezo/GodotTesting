@@ -1,66 +1,69 @@
-# Agent-Assisted Game Development — Godot
+# GodotTesting — Agent-Assisted Game Development
 
-Experimental repo for testing agentic workflows in game development with Godot 4.x.
+A 2D Godot 4.7 game project used to test agent-assisted game development with local LLMs. The repo root **is** the Godot project — open `project.godot` directly in the editor; there is no nested project folder.
 
-## Purpose
+The method follows the research in [agent-assisted-game-dev.md](agent-assisted-game-dev-report/agent-assisted-game-dev.md): design first, build one system at a time, test after every build, then apply decision gates (ship / cut / iterate once — never more).
 
-This repo documents and scaffolds the iterative, agent-assisted game development process outlined in [agent-assisted-game-dev.md](agent-assisted-game-dev-report/agent-assisted-game-dev.md). The goal is to validate that local and cloud LLMs can reliably assist first-time Godot developers through structured iteration — not one-shot generation.
-
-## Repo Structure
+## Layout
 
 ```
 .
-├── agent-assisted-game-dev-report/   # Research and findings
-│   └── agent-assisted-game-dev.md
-├── docs/                             # Design documents
-│   ├── gdd.md                        # Game Design Document (template)
-│   └── tech-design.md                # Technical architecture notes
-├── src/                              # Source code (Godot GDScript)
+├── project.godot                     # Godot 4.7 project config (repo root IS the project)
+├── scenes/
+│   └── main.tscn                     # Minimal boot scene — the "game already runs" baseline
+├── src/
+│   ├── main.gd                       # Boot log; gameplay systems go below
 │   ├── player/
 │   ├── enemies/
 │   ├── ui/
 │   └── systems/
-├── assets/                           # Game assets
+├── assets/
 │   ├── sprites/
-│   ├── audio/
-│   └── models/
-├── CLAUDE.md                         # Project context for local LLM
-├── .gitignore
-└── README.md
+│   └── audio/
+├── docs/
+│   ├── gdd.md                        # One-page game design document (template)
+│   └── tech-design.md                # Technical architecture notes
+├── agent-assisted-game-dev-report/   # Research and findings
+│   └── agent-assisted-game-dev.md
+├── CLAUDE.md                         # Project context for the agent (Cline/Bionic)
+├── .clinerules                       # Cline entry point — points at CLAUDE.md
+├── GETTING_STARTED.md                # Install, open, verify, tool stack
+├── README.md
+└── .gitignore                        # Official Godot template (scenes/resources/assets ARE versioned)
 ```
 
 ## Workflow
 
-The project follows the **Iteration Packet** pattern from the research report:
+The **Iteration Packet** pattern from the report:
 
-1. **Design** — One-page GDD + tech design in `docs/`
-2. **Prototype one system** — Build a single mechanic, test it, verify
-3. **Iterate** — Use structured iteration packets (see report §1.4)
-4. **Decision gate** — Ship it, cut it, or iterate once more
+1. **Design** — one-page GDD + tech design in `docs/`
+2. **Prototype one system** — build a single mechanic in isolation
+3. **Verify** — headless boot check (`godot --headless --path . --quit-after 10`) plus a visual F5 check
+4. **Iterate** — structured iteration packet (current state, change, expected behavior, constraints)
+5. **Decision gate** — ship it, cut it, or iterate once more
 
-See `CLAUDE.md` for the full project context the LLM reads on every interaction.
+The agent's context entry points are `CLAUDE.md` (full context) and `.clinerules` (auto-injected rules for Cline).
 
-## Tech Stack
+## Stack
 
-- **Engine**: Godot 4.x
-- **Language**: GDScript (beginner-friendly; C# available if needed)
-- **Local LLM**: Qwen3-4B / Llama 3.1 8B (coding tasks)
-- **Cloud LLM**: Claude / GPT-4 (complex systems, asset generation)
-- **Asset Pipeline**: Stable Diffusion XL / Flux (sprites, concept art)
+- **Engine:** Godot 4.7, GDScript, 2D
+- **Agent:** Cline (VS Code) or Bionic (LM Studio), running locally
+- **Models (Ollama):** Qwen3 30B (`qwen3:30b`) for day-to-day work; Nemotron 3.5 Super 120B (`nemotron-3.5-super:120b`) for comprehensive / overnight sessions
+- **Art (placeholder):** Pixelorama, Kenney CC0 packs, sfxr.me
+- **Version control:** Git — one small commit per verified iteration
 
 ## Getting Started
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) for the full setup guide — Godot installation (winget or ZIP), project creation, and verification. The file includes agent-executable PowerShell commands.
+See [GETTING_STARTED.md](GETTING_STARTED.md) — install Godot + Ollama, open the repo as the project, and run the baseline verification. After that:
 
-After setup, read:
-1. `agent-assisted-game-dev-report/agent-assisted-game-dev.md` for the methodology
-2. `CLAUDE.md` for the LLM context file
-3. `docs/gdd.md` and `docs/tech-design.md` to begin design
+1. `agent-assisted-game-dev-report/agent-assisted-game-dev.md` — the methodology
+2. `CLAUDE.md` — what the agent reads before every task
+3. `docs/gdd.md` and `docs/tech-design.md` — fill in the design, then start iteration 1 (player movement)
 
 ## Status
 
-**Pre-production.** No game code yet — repo scaffolded for first prototype.
+**Pre-production.** A booting main scene is committed. Next: write the GDD, then iteration 1 (player movement and input).
 
 ---
 
-*This is an experimental project. See the research report for methodology and constraints.*
+*Experimental project. See the research report for methodology and constraints.*

@@ -1,0 +1,13 @@
+# Cline rules — GodotTesting (Godot 4.7, GDScript, 2D)
+
+Read CLAUDE.md, docs/gdd.md, and docs/tech-design.md before starting any task.
+
+- The repo root IS the Godot project (project.godot is here). Scenes: `scenes/`. Scripts: `src/<system>/`. Assets: `assets/`.
+- One system per iteration. Use the iteration packet format from CLAUDE.md (current state, requested change, expected behavior, constraints).
+- After every code change, run the verification loop from the repo root:
+  1. `godot --headless --path . --quit-after 10` — expect exit 0, `[boot] main scene ready`, and no `SCRIPT ERROR`/`Parse Error`/`ERROR` lines (exit code alone is not a pass on Godot 4)
+  2. `godot --headless --path . --check-only --script res://src/<changed-script>.gd` — parse check; if the script uses a new `class_name` or an autoload, run `godot --headless --path . --import` once first
+  3. Visual change: run F5 in the editor and confirm the result
+- Never chain more than 3 iterations without a passing verification gate.
+- Do not add systems that are not in docs/gdd.md. Scope is fixed by the MVP.
+- Keep CLAUDE.md and docs/ in sync when the structure changes.
