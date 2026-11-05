@@ -1,0 +1,43 @@
+# Godot
+*.godot
+*.godot.bak
+*.remap
+*.import
+project.godot
+*.png
+*.tscn
+*.tscn.bak
+*.tres
+*.tpproj
+*.tpproj.bak
+*.log
+*.cfg
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+.venv
+venv/
+ENV/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Build
+bin/
+dist/
+*.apk
+*.aab
+*.pck
