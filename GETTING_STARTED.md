@@ -1,6 +1,6 @@
 # Getting Started
 
-Setup for this machine: Windows 11, local agent (Cline or Bionic), local models via Ollama. Every command is written to be executable by an agent; each step ends with a verification check.
+Setup for this machine: Windows 11, local agent (Cline or Bionic), models served by LM Studio on the Ubuntu workstation. Every command is written to be executable by an agent; each step ends with a verification check.
 
 > **Versions:** Godot 4.7.2 is the current stable (released 2026-08-18); the winget package ID and download link below were verified against it. If a newer 4.x stable exists, the same steps apply with the new version number.
 
@@ -45,21 +45,26 @@ Use `& "C:\Godot\4.7.2\Godot_v4.7.2-stable_win64.exe"` in later steps if you wen
 
 ---
 
-## Step 2 — Install Ollama and the working models
+## Step 2 — Verify the LM Studio model stack
 
-```powershell
-winget install Ollama.Ollama
-```
+The models are **not installed on this machine** — they are served by [LM Studio](https://lmstudio.ai/) on the Ubuntu workstation (24GB 4090, 64GB RAM). Verify the server is up and the three working models are in the library:
 
-If winget can't find it, `winget search ollama` or download from [ollama.com/download](https://ollama.com/download). Open a **new terminal**, then pull the models:
+1. In LM Studio, open the **Server** tab and start the local server (OpenAI-compatible, default `http://localhost:1234`). If the server runs on the Ubuntu box, use its LAN address instead, e.g. `http://192.168.x.x:1234`.
+2. Verify (adjust the URL if the server is remote):
+   ```powershell
+   Invoke-RestMethod "http://localhost:1234/v1/models" | Select-Object -ExpandProperty data | Select-Object id
+   ```
+   Expected: three entries — `Qwen/Qwen3.8-27B`, `Qwen/Qwen3.5-35B-A3B`, and the NVIDIA Nemotron 3.5 Super VL entry.
 
-```powershell
-ollama pull qwen3:30b                # day-to-day — Qwen3-30B-A3B (MoE, ~19GB, 256K context)
-ollama pull nemotron-3.5-super:120b  # overnight — Nemotron 3.5 Super (120B MoE, 80–90GB, 1M context, vision)
-ollama list                          # both models should appear
-```
+**Model policy (also in AGENTS.md):**
 
-**Model policy (also in CLAUDE.md):** Qwen 30B for day-to-day coding and iteration; Nemotron 3.5 Super 120B for comprehensive / long autonomous sessions. `qwen3:32b` (dense, ~20GB, 40K context) is the alternative day-to-day tag if you prefer dense over MoE. Note the overnight model downloads ~80–90GB and needs a machine with the RAM to serve it — if this box can't host it, run the loop on qwen3:30b and pull it where it will run. Tags verified against the Ollama library on 2026-11-05 ([qwen3](https://ollama.com/library/qwen3), [nemotron-3.5-super](https://ollama.com/library/nemotron-3.5-super)).
+| Model | Use for |
+|-------|---------|
+| `qwen3.8-27b` | Typical interaction — day-to-day default. Dense 27B, native VL, strongest coding/agentic scores of the three |
+| `qwen3.5-35b-a3b` | Quick changes — small, surgical edits. 35B MoE with 3B active per token, so it runs fast and cheap |
+| `nemotron-3.5-super-vl` | Deep thinking — comprehensive / overnight long-horizon sessions |
+
+All three run at 200k+ context on this box, and all three are vision-language — when a bug is visual, attach a screenshot of the running game or the Godot editor to the prompt. Model references: [Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B), [Qwen3.5-35B-A3B](https://huggingface.co/Qwen/Qwen3.5-35B-A3B), NVIDIA Nemotron 3.5 Super VL.
 
 ---
 
@@ -118,7 +123,7 @@ Ordered by priority — install each only when it removes a specific bottleneck.
 | Tool | Purpose | Status |
 |------|---------|--------|
 | Godot 4.7.2 | Engine (Step 1) | Standard build includes GDScript; the .NET build adds C# (requires .NET SDK) |
-| Ollama | Local model runtime (Step 2) | Qwen 27–30B + Nemotron 120B pulled |
+| LM Studio (Ubuntu workstation) | Model server for the agent — OpenAI-compatible endpoint (Step 2) | `qwen3.8-27b` + `qwen3.5-35b-a3b` + `nemotron-3.5-super-vl` in the library |
 | Cline or Bionic | Agent harness driving the iteration loop | Cline in VS Code (reads `.clinerules`), or Bionic in LM Studio |
 | Git | Version control | `winget install Git.Git` or [git-scm.com](https://git-scm.com/) |
 
@@ -203,5 +208,7 @@ The .NET build requires the [.NET SDK](https://dotnet.microsoft.com/download). N
 - GDScript style guide: [docs.godotengine.org](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_styleguide.html)
 - Project organization best practices: [docs.godotengine.org](https://docs.godotengine.org/en/stable/tutorials/best_practices/project_organization.html)
 - Godot 4.7.2 release (2026-08-18): [github.com/godotengine/godot — 4.7.2-stable](https://github.com/godotengine/godot/releases/tag/4.7.2-stable)
-- Ollama model tags: [ollama.com/library/qwen3](https://ollama.com/library/qwen3), [ollama.com/library/nemotron-3.5-super](https://ollama.com/library/nemotron-3.5-super)
+- Qwen3.8-27B: [huggingface.co/Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B)
+- Qwen3.5-35B-A3B: [huggingface.co/Qwen/Qwen3.5-35B-A3B](https://huggingface.co/Qwen/Qwen3.5-35B-A3B)
+- Cline AGENTS.md support (rule types table): [docs.cline.bot — Rules](https://docs.cline.bot/customization/cline-rules)
 - Headless exit-code traps (measured on 4.7.2): [Godot forum — "Things that exit 0 in Godot 4 headless even though they failed"](https://forum.godotengine.org/t/things-that-exit-0-in-godot-4-headless-even-though-they-failed-measured-reproducible/145990)

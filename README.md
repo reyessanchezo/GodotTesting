@@ -25,8 +25,9 @@ The method follows the research in [agent-assisted-game-dev.md](agent-assisted-g
 │   └── tech-design.md                # Technical architecture notes
 ├── agent-assisted-game-dev-report/   # Research and findings
 │   └── agent-assisted-game-dev.md
-├── CLAUDE.md                         # Project context for the agent (Cline/Bionic)
-├── .clinerules                       # Cline entry point — points at CLAUDE.md
+├── AGENTS.md                         # Single source of truth for agent context (Cline/Bionic/local models)
+├── CLAUDE.md                         # Pointer → AGENTS.md (for tools that look for CLAUDE.md)
+├── .clinerules                       # Cline entry point — points at AGENTS.md
 ├── GETTING_STARTED.md                # Install, open, verify, tool stack
 ├── README.md
 └── .gitignore                        # Official Godot template (scenes/resources/assets ARE versioned)
@@ -42,22 +43,22 @@ The **Iteration Packet** pattern from the report:
 4. **Iterate** — structured iteration packet (current state, change, expected behavior, constraints)
 5. **Decision gate** — ship it, cut it, or iterate once more
 
-The agent's context entry points are `CLAUDE.md` (full context) and `.clinerules` (auto-injected rules for Cline).
+The agent's context entry point is `AGENTS.md` (single source of truth, read natively by Cline); `CLAUDE.md` and `.clinerules` are pointers to it.
 
 ## Stack
 
 - **Engine:** Godot 4.7, GDScript, 2D
 - **Agent:** Cline (VS Code) or Bionic (LM Studio), running locally
-- **Models (Ollama):** Qwen3 30B (`qwen3:30b`) for day-to-day work; Nemotron 3.5 Super 120B (`nemotron-3.5-super:120b`) for comprehensive / overnight sessions
+- **Models (LM Studio, Ubuntu workstation):** `qwen3.8-27b` for typical interaction; `qwen3.5-35b-a3b` for quick changes; `nemotron-3.5-super-vl` for deep thinking / overnight sessions — all 200k+ context, all VL
 - **Art (placeholder):** Pixelorama, Kenney CC0 packs, sfxr.me
 - **Version control:** Git — one small commit per verified iteration
 
 ## Getting Started
 
-See [GETTING_STARTED.md](GETTING_STARTED.md) — install Godot + Ollama, open the repo as the project, and run the baseline verification. After that:
+See [GETTING_STARTED.md](GETTING_STARTED.md) — install Godot, verify the LM Studio model stack, open the repo as the project, and run the baseline verification. After that:
 
 1. `agent-assisted-game-dev-report/agent-assisted-game-dev.md` — the methodology
-2. `CLAUDE.md` — what the agent reads before every task
+2. `AGENTS.md` — what the agent reads before every task
 3. `docs/gdd.md` and `docs/tech-design.md` — fill in the design, then start iteration 1 (player movement)
 
 ## Status
